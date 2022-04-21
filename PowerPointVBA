@@ -1,0 +1,134 @@
+
+Private Sub Close_Button_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+
+End Sub
+
+Private Sub CommandButton1_Click() 'Datei auswählen
+    Call browseFilePath1
+End Sub
+
+Private Sub CommandButton2_Click() 'Ordner auswählen
+    Call browseFilePath2
+End Sub
+Private Sub Pfad2_Change()
+
+End Sub
+
+
+Private Sub browseFilePath1() 'Datei auswählen
+    On Error GoTo err
+    Dim fileExplorer As FileDialog
+    Set fileExplorer = Application.FileDialog(msoFileDialogFilePicker)
+
+    'To allow or disable to multi select
+    fileExplorer.AllowMultiSelect = False
+
+    With fileExplorer
+        If .Show = -1 Then 'Any file is selected
+            Me.Pfad1.Value = .SelectedItems.Item(1)
+        Else ' else dialog is cancelled
+            MsgBox "Keine Auswahl getroffen"
+            Me.Pfad1.Value = "" ' when cancelled set blank as file path.
+        End If
+    End With
+err:
+    Exit Sub
+End Sub
+
+Private Sub browseFilePath2()
+    On Error GoTo err
+    Dim fileExplorer As FileDialog
+    Set fileExplorer = Application.FileDialog(msoFileDialogFolderPicker)
+
+    'To allow or disable to multi select
+    fileExplorer.AllowMultiSelect = False
+
+    With fileExplorer
+        If .Show = -1 Then 'Any file is selected
+            Me.Pfad2.Value = .SelectedItems.Item(1)
+        Else ' else dialog is cancelled
+            MsgBox "Keine Auswahl getroffen"
+            Me.Pfad2.Value = "" ' when cancelled set blank as file path.
+        End If
+    End With
+err:
+    Exit Sub
+End Sub
+
+Private Function Choosefolder()
+ Choosefolder = Me.Pfad2.Value
+End Function
+
+
+
+
+
+Private Sub Close_Button_Click() 'das ist der Übernehmen Button
+Dim i As Integer
+Dim arrFilesInFolder As Variant
+arrFilesInFolder = GetAllFilesInDirectory(Choosefolder)
+ 
+For i = LBound(arrFilesInFolder) To UBound(arrFilesInFolder)
+    Call AddSlideAndImage(arrFilesInFolder(i))
+Next
+End Sub
+Private Function GetAllFilesInDirectory(Choosefolder) As Variant
+Dim objFSO As Object
+Dim objFolder As Object
+Dim objFile As Object
+Dim arrOutput() As Variant
+Dim i As Integer
+ 
+ 
+'Create an instance of the FileSystemObject
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+'Get the folder object
+Set objFolder = objFSO.GetFolder(Choosefolder) 'über den button 2 ausgewählt
+
+ReDim arrOutput(0)
+i = 1
+'loops through each file in the directory and prints their names and path
+For Each objFile In objFolder.Files
+  
+    'print file path
+    arrOutput(i - 1) = objFile.Path
+    ReDim Preserve arrOutput(UBound(arrOutput) + 1)
+    i = i + 1
+Next objFile
+   ReDim Preserve arrOutput(UBound(arrOutput) - 1)
+GetAllFilesInDirectory = arrOutput
+End Function
+
+
+Private Function AddSlideAndImage(ByVal strFile As String)
+Dim objPresentaion As Presentation
+Dim objSlide As Slide
+ 
+Set objPresentaion = ActivePresentation
+ 
+Set objSlide = objPresentaion.Slides.Add(1, PpSlideLayout.ppLayoutChart)
+Call objSlide.Shapes.AddPicture(strFile, msoCTrue, msoCTrue, 100, 100)
+End Function
+
+
+
+Private Sub Cancel_Button_Click()
+On Error Resume Next
+
+    If MsgBox("Sie haben keine Auswahl getroffen." & Chr(13) & "Es werden keine Änderungen vorgenommen, d.h. alle bestehenden (alten) Angaben bleiben erhalten." & Chr(13) & Chr(13) & _
+              "Wollen Sie wirklich abbrechen?", vbQuestion + vbYesNo + vbDefaultButton2, "Keine Änderung...") = vbNo Then
+        Exit Sub
+    End If
+
+
+    If ActiveWindow.ActivePane.View.ShowAll = True Then
+        ActiveWindow.ActivePane.View.ShowAll = False
+    End If
+
+    Application.ScreenUpdating = True
+
+    Unload Anleitung
+
+End Sub
+
+
